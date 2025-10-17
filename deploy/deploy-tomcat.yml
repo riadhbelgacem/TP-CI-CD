@@ -1,6 +1,7 @@
 - name: Deploy WAR to Tomcat container
   hosts: localhost
   connection: local
+  become: true       # <<< run tasks as root
   vars:
     tomcat_webapps_path: /usr/local/tomcat/webapps
     tomcat_container_name: tomcat
