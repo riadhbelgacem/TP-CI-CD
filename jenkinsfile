@@ -21,7 +21,6 @@ pipeline {
 
     stage('SonarQube Analysis') {
       steps {
-        // ensure this name exactly matches Manage Jenkins -> Configure System -> SonarQube servers
         withSonarQubeEnv('MySonarQubeServer') {
           // inject the secret token stored in Jenkins (id: jenkins-sonar)
           withCredentials([string(credentialsId: 'jenkins-sonar', variable: 'SONAR_TOKEN')]) {
