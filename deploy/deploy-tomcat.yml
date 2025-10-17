@@ -1,0 +1,24 @@
+- name: Deploy WAR to Tomcat container
+  hosts: localhost
+  connection: local
+  vars:
+    tomcat_container_name: tomcat
+  tasks:
+    - name: Find the WAR file
+      find:
+        paths: "{{ playbook_dir }}/../target"
+        patterns: "*.war"
+      register: war_files
+    
+    - name: Fail if no WAR found
+      fail:
+        msg: "No WAR file found in target/"
+      when: war_files.files | length == 0
+    
+    - name: Copy WAR into Tomcat container
+      command: >
+        docker cp {{ war_files.files[0].path }} 
+        {{ tomcat_container_name }}:/usr/local/tomcat/webapps/ROOT.war
+    
+    - name: Restart Tomcat container
+      command: docker restart {{ tomcat_container_name }}
