@@ -15,9 +15,30 @@
 
 ## Technologies Used
 
-- **Java 21** | **Spring Boot 3.5.6** | **Spring Data JPA** | **H2 Database** | **Lombok**
-- **JUnit 5** | **Mockito** | **MockMvc**
-- **Jenkins** | **Maven** | **SonarQube** | **Nexus** | **Ansible** | **Docker** | **Tomcat** | **ngrok**
+### Backend & Framework
+- **Java 21** - Programming Language
+- **Spring Boot 3.5.6** - Application Framework
+- **Spring Data JPA** - Data Access Layer
+- **Spring Data REST** - RESTful API
+- **H2 Database** - In-memory database for testing
+- **MySQL** - Production database (configurable)
+- **Lombok** - Reduce boilerplate code
+
+### Testing
+- **JUnit 5** - Unit testing framework
+- **Mockito** - Mocking framework
+- **Spring Boot Test** - Integration testing
+- **MockMvc** - REST API testing
+
+### CI/CD & DevOps
+- **Jenkins** - Continuous Integration/Deployment
+- **Maven** - Build automation
+- **SonarQube** - Code quality analysis
+- **Nexus Repository** - Artifact management
+- **Ansible** - Configuration management & deployment
+- **Docker** - Containerization
+- **Tomcat** - Application server
+- **ngrok** - Webhook tunneling
 
 ---
 
@@ -744,9 +765,18 @@ curl -X DELETE http://localhost:8082/deletecountry/1
 mvn test
 ```
 
-**Test Coverage**: Unit Tests, Integration Tests, Repository Tests, Controller Tests (Mockito & MockMvc)
+### Test Coverage
 
-**Results**: `target/surefire-reports/` - Available in Jenkins after each build
+- **Unit Tests**: Testing individual components
+- **Integration Tests**: Testing API endpoints
+- **Repository Tests**: Testing data access layer
+- **Controller Tests**: Testing with Mockito and MockMvc
+
+### Test Results
+
+Test results are generated in:
+- `target/surefire-reports/` - JUnit XML reports
+- Available in Jenkins after each build
 
 ---
 
