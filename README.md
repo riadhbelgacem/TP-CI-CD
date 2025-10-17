@@ -15,30 +15,9 @@
 
 ## Technologies Used
 
-### Backend & Framework
-- **Java 21** - Programming Language
-- **Spring Boot 3.5.6** - Application Framework
-- **Spring Data JPA** - Data Access Layer
-- **Spring Data REST** - RESTful API
-- **H2 Database** - In-memory database for testing
-- **MySQL** - Production database (configurable)
-- **Lombok** - Reduce boilerplate code
-
-### Testing
-- **JUnit 5** - Unit testing framework
-- **Mockito** - Mocking framework
-- **Spring Boot Test** - Integration testing
-- **MockMvc** - REST API testing
-
-### CI/CD & DevOps
-- **Jenkins** - Continuous Integration/Deployment
-- **Maven** - Build automation
-- **SonarQube** - Code quality analysis
-- **Nexus Repository** - Artifact management
-- **Ansible** - Configuration management & deployment
-- **Docker** - Containerization
-- **Tomcat** - Application server
-- **ngrok** - Webhook tunneling
+**Backend:** Java 21, Spring Boot 3.5.6, Spring Data JPA, Spring Data REST, H2/MySQL, Lombok  
+**Testing:** JUnit 5, Mockito, Spring Boot Test, MockMvc  
+**CI/CD:** Jenkins, Maven, SonarQube, Nexus, Ansible, Docker, Tomcat, ngrok
 
 ---
 
@@ -504,13 +483,6 @@ mvn spring-boot:run
 
 Access the application at: `http://localhost:8082`
 
-### Access H2 Database Console
-
-- URL: `http://localhost:8082/h2-console`
-- JDBC URL: `jdbc:h2:mem:testdb`
-- Username: `sa`
-- Password: (leave empty)
-
 ---
 
 ## CI/CD Pipeline
@@ -558,17 +530,6 @@ http://localhost:8082
 | DELETE | `/deletecountry/{id}` | Delete country |
 
 ### Example Requests
-
-```bash
-# Get all countries
-curl -X GET http://localhost:8082/getcountries
-
-# Add new country
-curl -X POST http://localhost:8082/addcountry -H "Content-Type: application/json" \
-  -d '{"idCountry": 1, "name": "France", "capital": "Paris"}'
-```
-
----
 
 #### Get All Countries
 ```bash
@@ -630,54 +591,5 @@ Test results are generated in:
 - **Nexus**: `http://localhost:8081` - Artifact management
 - **Jenkins**: `http://localhost:8080` - Build history, test results
 
----
-
-## Troubleshooting
-
-### Common Issues
-
-#### Jenkins Can't Access Docker
-
-```bash
-# Add jenkins user to docker group
-sudo usermod -aG docker jenkins
-sudo systemctl restart jenkins
-```
-
-#### Port Already in Use
-
-```bash
-# Check what's using the port
-sudo lsof -i :8080
-
-# Stop the process or change the port
-```
-
-#### SonarQube Container Won't Start
-
-```bash
-# Increase vm.max_map_count
-sudo sysctl -w vm.max_map_count=262144
-
-# Make it permanent
-echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
-```
-
-#### Ansible Can't Connect via SSH
-
-```bash
-# Test SSH connection
-ssh -i ~/.ssh/ansible_id_rsa $USER@127.0.0.1
-
-# Check SSH service
-sudo systemctl status ssh
-```
 
 ---
-
-## Author
-
-**Riadh Belgacem** - [@riadhbelgacem](https://github.com/riadhbelgacem)
-
-Project Link: [https://github.com/riadhbelgacem/TP-CI-CD](https://github.com/riadhbelgacem/TP-CI-CD)
-
