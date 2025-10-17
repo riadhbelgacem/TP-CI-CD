@@ -3,7 +3,7 @@
   connection: local
   become: true       # <<< run tasks as root
   vars:
-    tomcat_webapps_path: /usr/local/tomcat/webapps
+    tomcat_webapps_path: /home/jenkins/tomcat/webapps
     tomcat_container_name: tomcat
     war_file: "../{{ artifact }}"
 
@@ -24,3 +24,5 @@
       community.docker.docker_container:
         name: "{{ tomcat_container_name }}"
         state: restarted
+
+
