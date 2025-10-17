@@ -46,9 +46,6 @@ sudo apt update && sudo apt upgrade -y
 
 # Install Java 21
 sudo apt install -y openjdk-21-jdk
-
-# Verify installation
-java -version
 ```
 
 #### Step 1.2: Set JAVA_HOME
@@ -78,9 +75,6 @@ export PATH="$M2_HOME/bin:$PATH"
 echo 'export M2_HOME="/usr/share/maven"' >> ~/.bashrc
 echo 'export PATH="$M2_HOME/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
-
-# Verify installation
-mvn -version
 ```
 
 #### Step 1.4: Install Jenkins
@@ -104,21 +98,9 @@ sudo apt install -y jenkins
 # Start Jenkins service
 sudo systemctl enable jenkins
 sudo systemctl start jenkins
-
-# Check Jenkins status
-sudo systemctl status jenkins --no-pager
-
-# Get initial admin password
-sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
-#### Step 1.5: Restart Jenkins (if needed)
-
-```bash
-sudo systemctl restart jenkins
-```
-
-Access Jenkins at: `http://localhost:8080`
+Access Jenkins at: `http://localhost:8080` (Get initial password: `sudo cat /var/lib/jenkins/secrets/initialAdminPassword`)
 
 ---
 
@@ -134,9 +116,6 @@ sudo apt install -y docker.io
 # Start Docker service
 sudo systemctl enable docker
 sudo systemctl start docker
-
-# Verify Docker installation
-docker --version
 
 # Add current user to docker group
 sudo usermod -aG docker $USER
@@ -171,9 +150,6 @@ docker run -d \
   -p 9000:9000 \
   -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true \
   sonarqube:latest
-
-# Check if container is running
-docker ps | grep sonarqube
 ```
 
 #### Step 3.3: Access SonarQube
@@ -207,13 +183,9 @@ docker run -d \
   -p 8081:8081 \
   -v nexus-data:/nexus-data \
   sonatype/nexus3:latest
-
-# Wait for Nexus to start (may take 2-3 minutes)
-docker logs -f nexus
-
-# Get initial admin password
-docker exec nexus cat /nexus-data/admin.password
 ```
+
+Access Nexus at: `http://localhost:8081` (Get initial password: `docker exec nexus cat /nexus-data/admin.password`)
 
 #### Step 4.2: Access Nexus
 
@@ -250,9 +222,6 @@ docker exec nexus cat /nexus-data/admin.password
 # Install Ansible
 sudo apt update
 sudo apt install -y ansible
-
-# Verify installation
-ansible --version
 ```
 
 #### Step 5.2: Setup SSH for Ansible
@@ -276,12 +245,6 @@ sudo apt install -y openssh-server
 # Enable and start SSH service
 sudo systemctl enable ssh
 sudo systemctl start ssh
-
-# Verify SSH is running
-sudo systemctl status ssh --no-pager
-
-# Test SSH connection
-ssh -i ~/.ssh/ansible_id_rsa $USER@127.0.0.1
 ```
 
 #### Step 5.4: Create Ansible Playbook
@@ -394,9 +357,6 @@ tar xvzf ngrok-v3-stable-linux-amd64.tgz
 
 # Move to PATH
 sudo mv ngrok /usr/local/bin/
-
-# Verify installation
-ngrok version
 ```
 
 #### Step 7.2: Setup ngrok Account
