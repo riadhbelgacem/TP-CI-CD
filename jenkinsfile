@@ -1,0 +1,34 @@
+pipeline {
+  agent any
+  tools {
+    jdk 'JDK21'
+    maven 'M2_HOME'   // <-- replace M2_HOME with the exact "Name" shown in Global Tool Config
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { git branch: 'main', url: 'https://github.com/riadhbelgacem/TP-CI-CD.git' }
+    }
+
+    stage('Compile') {
+      steps { 'mvn clean install' }
+      post {      
+               success {junit allowEmptyResult: true, testResults:'**/target*surfire-report' }
+        }
+    }
+
+  
+
+    stage('SonarQube Analysis') {
+      steps {
+        // ensure this name exactly matches Manage Jenkins -> Configure System -> SonarQube servers
+        withSonarQubeEnv('MySonarQubeServer') {
+          // inject the secret token stored in Jenkins (id: jenkins-sonar)
+          withCredentials([string(credentialsId: 'jenkins-sonar', variable: 'SONAR_TOKEN')]) {
+            sh 'mvn -B sonar:sonar -Dsonar.login=$SONAR_TOKEN'
+          }
+        }
+      }
+    }
+  }
+}
