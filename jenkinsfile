@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK21'        // Make sure this matches the exact name in "Global Tool Configuration"
+        jdk 'JDK21'        // Make sure this matches the exact name in "Global Tool Configuraton"
         maven 'M2_HOME'    // Same here — must match the configured Maven name
     }
 
