@@ -5,73 +5,19 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green)]()
 [![Maven](https://img.shields.io/badge/Maven-3.9.9-orange)]()
 
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Technologies Used](#technologies-used)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Installation & Setup](#installation--setup)
-  - [1. Jenkins Installation](#1-jenkins-installation)
-  - [2. Docker Setup](#2-docker-setup)
-  - [3. SonarQube Configuration](#3-sonarqube-configuration)
-  - [4. Nexus Repository Setup](#4-nexus-repository-setup)
-  - [5. Ansible Configuration](#5-ansible-configuration)
-  - [6. Jenkins Configuration](#6-jenkins-configuration)
-  - [7. GitHub Webhook Setup](#7-github-webhook-setup)
-- [Running the Application](#running-the-application)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [API Endpoints](#api-endpoints)
-- [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-
 ---
 
 ## Project Overview
 
 **Country Service** is a RESTful web service built with Spring Boot that provides CRUD operations for managing country data. The project demonstrates a complete CI/CD pipeline implementation using Jenkins, including automated testing, code quality analysis, artifact management, and automated deployment.
 
-### Key Features
-
-- RESTful API for Country management
-- Spring Data JPA with H2 database
-- Comprehensive unit and integration tests
-- Automated CI/CD pipeline with Jenkins
-- Code quality analysis with SonarQube
-- Artifact management with Nexus Repository
-- Automated deployment using Ansible
-- Containerized deployment with Docker & Tomcat
-
 ---
 
 ## Technologies Used
 
-### Backend & Framework
-- **Java 21** - Programming Language
-- **Spring Boot 3.5.6** - Application Framework
-- **Spring Data JPA** - Data Access Layer
-- **Spring Data REST** - RESTful API
-- **H2 Database** - In-memory database for testing
-- **MySQL** - Production database (configurable)
-- **Lombok** - Reduce boilerplate code
-
-### Testing
-- **JUnit 5** - Unit testing framework
-- **Mockito** - Mocking framework
-- **Spring Boot Test** - Integration testing
-- **MockMvc** - REST API testing
-
-### CI/CD & DevOps
-- **Jenkins** - Continuous Integration/Deployment
-- **Maven** - Build automation
-- **SonarQube** - Code quality analysis
-- **Nexus Repository** - Artifact management
-- **Ansible** - Configuration management & deployment
-- **Docker** - Containerization
-- **Tomcat** - Application server
-- **ngrok** - Webhook tunneling
+- **Java 21** | **Spring Boot 3.5.6** | **Spring Data JPA** | **H2 Database** | **Lombok**
+- **JUnit 5** | **Mockito** | **MockMvc**
+- **Jenkins** | **Maven** | **SonarQube** | **Nexus** | **Ansible** | **Docker** | **Tomcat** | **ngrok**
 
 ---
 
@@ -83,13 +29,8 @@
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-- **Ubuntu/Debian-based Linux** (WSL2 recommended for Windows)
-- **Java 21** (OpenJDK)
-- **Maven 3.9+**
-- **Docker** & **Docker Compose**
-- **Git**
+- Ubuntu/Debian-based Linux (WSL2 for Windows)
+- Java 21, Maven 3.9+, Docker, Git
 
 ---
 
@@ -753,6 +694,17 @@ http://localhost:8082
 
 ### Example Requests
 
+```bash
+# Get all countries
+curl -X GET http://localhost:8082/getcountries
+
+# Add new country
+curl -X POST http://localhost:8082/addcountry -H "Content-Type: application/json" \
+  -d '{"idCountry": 1, "name": "France", "capital": "Paris"}'
+```
+
+---
+
 #### Get All Countries
 ```bash
 curl -X GET http://localhost:8082/getcountries
@@ -788,52 +740,21 @@ curl -X DELETE http://localhost:8082/deletecountry/1
 
 ## Testing
 
-### Run All Tests
-
 ```bash
 mvn test
 ```
 
-### Test Coverage
+**Test Coverage**: Unit Tests, Integration Tests, Repository Tests, Controller Tests (Mockito & MockMvc)
 
-- **Unit Tests**: Testing individual components
-- **Integration Tests**: Testing API endpoints
-- **Repository Tests**: Testing data access layer
-- **Controller Tests**: Testing with Mockito and MockMvc
-
-### Test Results
-
-Test results are generated in:
-- `target/surefire-reports/` - JUnit XML reports
-- Available in Jenkins after each build
+**Results**: `target/surefire-reports/` - Available in Jenkins after each build
 
 ---
 
 ## Monitoring & Quality
 
-### SonarQube Dashboard
-
-Access SonarQube at `http://localhost:9000` to view:
-- Code coverage
-- Code smells
-- Bugs and vulnerabilities
-- Technical debt
-- Duplications
-
-### Nexus Repository
-
-Access Nexus at `http://localhost:8081` to view:
-- Published artifacts
-- Build versions
-- Dependency management
-
-### Jenkins Build History
-
-Access Jenkins at `http://localhost:8080` to view:
-- Build history
-- Test results
-- Console output
-- Pipeline visualization
+- **SonarQube**: `http://localhost:9000` - Code coverage, bugs, vulnerabilities
+- **Nexus**: `http://localhost:8081` - Artifact management
+- **Jenkins**: `http://localhost:8080` - Build history, test results
 
 ---
 
@@ -880,45 +801,9 @@ sudo systemctl status ssh
 
 ---
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## Author
 
-**Riadh Belgacem**
+**Riadh Belgacem** - [@riadhbelgacem](https://github.com/riadhbelgacem)
 
-- GitHub: [@riadhbelgacem](https://github.com/riadhbelgacem)
-- Project Link: [https://github.com/riadhbelgacem/TP-CI-CD](https://github.com/riadhbelgacem/TP-CI-CD)
+Project Link: [https://github.com/riadhbelgacem/TP-CI-CD](https://github.com/riadhbelgacem/TP-CI-CD)
 
----
-
-## Acknowledgments
-
-- Spring Boot Team
-- Jenkins Community
-- SonarQube Team
-- Sonatype Nexus
-- Ansible Community
-
----
-
-## 📞 Support
-
-For support, email your-email@example.com or open an issue in the GitHub repository.
-
----
-
-**Made with ❤️ and ☕**
