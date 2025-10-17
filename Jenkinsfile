@@ -83,7 +83,22 @@ pipeline {
                 }
             }
         }
-    
+        stage('Deploy to Tomcat') {
+            steps {
+                script {
+                    // Find the built WAR
+                    pom = readMavenPom file: "pom.xml"
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
+                    artifactPath = filesByGlob[0].path
+        
+                    // Run Ansible to deploy WAR
+                    sh """
+                        ansible-playbook deploy/deploy-tomcat.yml \
+                            --extra-vars "artifact=${artifactPath}"
+                    """
+                }
+            }
+        } 
     }
 
     post {
