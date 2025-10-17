@@ -2,7 +2,7 @@ pipeline {
   agent any
   tools {
     jdk 'JDK21'
-    maven 'M2_HOME'   // <-- replace M2_HOME with the exact "Name" shown in Global Tool Config..
+    maven 'M2_HOME'   // <-- replace M2_HOME with the exact "Name" shown in Global Tool Confi.
   }
 
   stages {
