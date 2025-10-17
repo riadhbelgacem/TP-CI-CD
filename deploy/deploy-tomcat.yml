@@ -1,28 +1,24 @@
 - name: Deploy WAR to Tomcat container
   hosts: localhost
   connection: local
-  become: true       # <<< run tasks as root
   vars:
-    tomcat_webapps_path: /home/jenkins/tomcat/webapps
     tomcat_container_name: tomcat
-    war_file: "../{{ artifact }}"
-
   tasks:
-    - name: Ensure Tomcat webapps directory exists
-      file:
-        path: "{{ tomcat_webapps_path }}"
-        state: directory
-        mode: '0755'
-
-    - name: Copy WAR to Tomcat webapps
-      copy:
-        src: "{{ war_file }}"
-        dest: "{{ tomcat_webapps_path }}/ROOT.war"
-        mode: '0644'
-
+    - name: Find the WAR file
+      find:
+        paths: "{{ playbook_dir }}/../target"
+        patterns: "*.war"
+      register: war_files
+    
+    - name: Fail if no WAR found
+      fail:
+        msg: "No WAR file found in target/"
+      when: war_files.files | length == 0
+    
+    - name: Copy WAR into Tomcat container
+      command: >
+        docker cp {{ war_files.files[0].path }} 
+        {{ tomcat_container_name }}:/usr/local/tomcat/webapps/ROOT.war
+    
     - name: Restart Tomcat container
-      community.docker.docker_container:
-        name: "{{ tomcat_container_name }}"
-        state: restarted
-
-
+      command: docker restart {{ tomcat_container_name }}
