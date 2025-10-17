@@ -5,7 +5,7 @@
   vars:
     tomcat_webapps_path: /usr/local/tomcat/webapps
     tomcat_container_name: tomcat
-    war_file: "{{ artifact }}"
+    war_file: "../{{ artifact }}"
 
   tasks:
     - name: Copy WAR to Tomcat webapps
