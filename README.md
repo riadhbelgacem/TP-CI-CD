@@ -23,7 +23,7 @@
 
 ## Architecture
 
-![CI/CD Pipeline Architecture](docs/images/architecture.png)
+![CI/CD Pipeline Architecture](docs/images/image.png)
 
 ---
 
@@ -449,7 +449,7 @@ Access the application at: `http://localhost:8082`
 
 ### Pipeline Stages
 
-![Jenkins Pipeline](docs/images/jenkins-pipeline.png)
+![Jenkins Pipeline](docs/images/jenkins.png)
 
 1. **Checkout** - Pull latest code from GitHub
 2. **Compile** - Compile Java source code
