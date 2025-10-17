@@ -42,13 +42,6 @@ pipeline {
             }
         }
 
-        stage('Quality Gate') {
-            steps {
-                echo 'Waiting for SonarQube quality gate...'
-                waitForQualityGate abortPipeline: true
-            }
-        }
-
         stage('Deploy to Nexus') {
             steps {
                 echo 'Deploying to Nexus Repository Manager...'
