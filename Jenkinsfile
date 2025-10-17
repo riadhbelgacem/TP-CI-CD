@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK21'        // Make sure this matches the exact name in "Global Tool Configuaton"
-        maven 'M2_HOME'    // Same here — must match the configured Maven name
+        jdk 'JDK21'        // Must match the name in "Global Tool Configuration"
+        maven 'M2_HOME'    // Must match your Maven installation name
     }
 
     stages {
@@ -16,10 +16,18 @@ pipeline {
 
         stage('Compile') {
             steps {
-                sh 'mvn clean install -DskipTests'
+                echo '🔧 Compiling source code...'
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo '🧪 Running unit tests...'
+                sh 'mvn test'
             }
             post {
-                success {
+                always {
                     junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
                 }
             }
@@ -27,9 +35,9 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                // Use your globally configured SonarQube installation
+                echo '📊 Running SonarQube code analysis...'
                 withSonarQubeEnv('MySonarQubeServer') {
-                    sh 'mvn -B verify sonar:sonar'
+                    sh 'mvn verify sonar:sonar'
                 }
             }
         }
@@ -37,7 +45,13 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline finished!'
+            echo '✅ Pipeline completed!'
+        }
+        success {
+            echo '🎉 Build, Test, and SonarQube Analysis succeeded!'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check console logs for details.'
         }
     }
 }
