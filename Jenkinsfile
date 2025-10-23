@@ -70,7 +70,7 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 echo '📤 Pushing Docker image to DockerHub...'
-                withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                withCredentials([string(credentialsId: 'dockerhub-paswd', variable: 'dockerhubpwd')]) {
                     sh "docker login -u ${DOCKER_USERNAME} -p ${dockerhubpwd}"
                     sh "docker push ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
                     sh "docker push ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
