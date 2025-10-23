@@ -7,17 +7,16 @@ pipeline {
     }
 
     environment {
-        NEXUS_VERSION = "nexus3"
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "localhost:8081"
-        NEXUS_REPOSITORY = "maven-1"
-        NEXUS_CREDENTIAL_ID = "NEXUS_CRED"
+        // Docker environment variables
+        DOCKER_USERNAME = "riadh2002"
+        DOCKER_IMAGE_NAME = "my-compte-service"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
+                echo '📥 Checking out source code...'
                 git branch: 'main', url: 'https://github.com/riadhbelgacem/TP-CI-CD.git'
             }
         }
@@ -57,55 +56,42 @@ pipeline {
             }
         }
 
-        stage('Publish to Nexus Repository Manager') {
+        stage('Build Docker Image') {
             steps {
+                echo '🐳 Building Docker image...'
                 script {
-                    pom = readMavenPom file: "pom.xml"
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
-                    if (filesByGlob.size() == 0) {
-                        error "❌ No artifact found in target/ to upload to Nexus"
-                    }
-                    artifactPath = filesByGlob[0].path
-                    echo "📤 Uploading ${artifactPath} to Nexus"
-                    nexusArtifactUploader(
-                        nexusVersion: NEXUS_VERSION,
-                        protocol: NEXUS_PROTOCOL,
-                        nexusUrl: NEXUS_URL,
-                        groupId: pom.groupId,
-                        version: pom.version,
-                        repository: NEXUS_REPOSITORY,
-                        credentialsId: NEXUS_CREDENTIAL_ID,
-                        artifacts: [
-                            [artifactId: pom.artifactId,
-                             classifier: '',
-                             file: artifactPath,
-                             type: pom.packaging],
-                            [artifactId: pom.artifactId,
-                             classifier: '',
-                             file: "pom.xml",
-                             type: "pom"]
-                        ]
-                    )
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ./compteservice"
+                    sh "docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+                    sh "docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
                 }
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Push to DockerHub') {
             steps {
-                script {
-                    // Find the freshly built artifact
-                    pom = readMavenPom file: "pom.xml"
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}")
-                    if (filesByGlob.size() == 0) {
-                        error "❌ No artifact found in target/ to deploy"
-                    }
-                    artifactPath = filesByGlob[0].path
-                    echo "🚀 Deploying ${artifactPath} to Tomcat via Ansible"
+                echo '📤 Pushing Docker image to DockerHub...'
+                withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
+                    sh "docker login -u ${DOCKER_USERNAME} -p ${dockerhubpwd}"
+                    sh "docker push ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+                    sh "docker push ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
+                }
+            }
+        }
 
-                    sh """
-                        ansible-playbook deploy/deploy-tomcat.yml \
-                            --extra-vars "artifact=${artifactPath}"
-                    """
+        stage('Deploy Microservices') {
+            steps {
+                echo '🚀 Deploying microservices...'
+                script {
+                    // Clean up existing containers
+                    sh 'docker rm -f mycompteservice1 mycompteservice2 || true'
+                    
+                    // Deploy service instances
+                    sh "docker run -d -p 8080:8080 --name mycompteservice1 ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+                    sh "docker run -d -p 8081:8080 --name mycompteservice2 ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+                    
+                    echo '✅ Services deployed:'
+                    echo '   - mycompteservice1 running on port 8080'
+                    echo '   - mycompteservice2 running on port 8081'
                 }
             }
         }
@@ -117,7 +103,7 @@ pipeline {
             echo '✅ Pipeline completed!'
         }
         success {
-            echo '🎉 Build, Test, Package, Nexus Upload, and Deployment succeeded!'
+            echo '🎉 Build, Test, Package, Docker Build/Push, and Deployment succeeded!'
         }
         failure {
             echo '❌ Pipeline failed. Check console logs for details.'
