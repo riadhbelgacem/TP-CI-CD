@@ -60,7 +60,7 @@ pipeline {
             steps {
                 echo '🐳 Building Docker image...'
                 script {
-                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ./compteservice"
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ."
                     sh "docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
                     sh "docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
                 }
@@ -110,3 +110,4 @@ pipeline {
         }
     }
 }
+
