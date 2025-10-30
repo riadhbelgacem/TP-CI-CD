@@ -78,28 +78,6 @@ pipeline {
             }
         }
 
-        stage('Deploy Microservices') {
-            steps {
-                echo '🚀 Deploying microservices...'
-                script {
-                    // Stop and remove existing containers
-                    sh 'docker stop mycompteservice1 mycompteservice2 || true'
-                    sh 'docker rm mycompteservice1 mycompteservice2 || true'
-                    
-                    // Wait a moment for ports to be released
-                    sh 'sleep 2'
-                    
-                    // Deploy service instances
-                    sh "docker run -d -p 8080:8080 --name mycompteservice1 ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
-                    sh "docker run -d -p 8081:8080 --name mycompteservice2 ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
-                    
-                    echo '✅ Services deployed:'
-                    echo '   - mycompteservice1 running on port 8080'
-                    echo '   - mycompteservice2 running on port 8081'
-                }
-            }
-        }
-
         stage('Deploy to Kubernetes') {
             steps {
                 echo '☸️ Deploying to Kubernetes...'
