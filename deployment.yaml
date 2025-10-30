@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment                    # Nom du déploiement
+  labels:
+    app: myapp                              # Label qui identifie l'application
+spec:
+  replicas: 3                               # Nombre de pods à créer
+  selector:
+    matchLabels:
+      app: myapp                            # Le sélecteur correspond aux labels des pods gérés
+  template:                                 # Modèle des pods créés par le déploiement
+    metadata:
+      labels:
+        app: myapp                          # Label appliqué aux pods (doit correspondre au selector)
+    spec:
+      containers:
+      - name: myapp-container               # Nom du conteneur
+        image: riadh2002/my-compte-service:latest  # Image Docker utilisée
+        ports:
+        - containerPort: 8080               # Port sur lequel le conteneur écoute
+
+
