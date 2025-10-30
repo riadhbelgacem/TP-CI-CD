@@ -98,7 +98,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo '☸️ Deploying to Kubernetes...'
-                kubeconfig(credentialsId: 'kubeconfig-file', serverUrl: '') {
+                withKubeConfig([credentialsId: 'kubeconfig-file']) {
                     sh 'kubectl apply -f deployment.yaml'
                     sh 'kubectl apply -f service.yaml'
                 }
