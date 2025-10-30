@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-country-service
+spec:
+  type: NodePort
+  selector:
+    app: myapp                              # Label appliqué aux pods (doit correspondre au selector)
+  ports:
+    - port: 8082                            # Port sur lequel le conteneur écoute
+      targetPort: 8080
+      nodePort: 30007
+      protocol: TCP
+
+
