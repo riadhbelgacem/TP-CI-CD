@@ -8,6 +8,7 @@
     dockerfile_path: './'
     docker_registry_username: riadh2002
     docker_registry_password: tsLK:7w8nBW3KfT
+    ansible_python_interpreter: /home/riadh/ansible-venv/bin/python3
   tasks:
     - name: Log in to Docker Hub
       community.general.docker_login:
