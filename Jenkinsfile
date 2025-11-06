@@ -9,7 +9,7 @@ pipeline {
     environment {
         // Docker environment variables
         DOCKER_USERNAME = "riadh2002"
-        DOCKER_IMAGE_NAME = "my-compte-service"
+        DOCKER_IMAGE_NAME = "my-country-service"
     }
 
     stages {
