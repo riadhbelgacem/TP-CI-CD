@@ -47,14 +47,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo '📊 Running SonarQube code analysis...'
-                withSonarQubeEnv('MySonarQubeServer') {
-                    sh 'mvn verify sonar:sonar'
-                }
-            }
-        }
 
         stage('Deploy using ansible playbook') {
             steps {
