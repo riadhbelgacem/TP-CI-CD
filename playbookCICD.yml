@@ -3,7 +3,7 @@
   connection: local
 
   vars:
-    image_name: my-country-service 
+    image_name: my-compte-service 
     image_tag: v1 
     dockerfile_path: './'
     docker_registry_username: riadh2002
