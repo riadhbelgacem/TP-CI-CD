@@ -56,43 +56,19 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Deploy using ansible playbook') {
             steps {
-                echo '🐳 Building Docker image...'
                 script {
-                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ."
-                    sh "docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
-                    sh "docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
+                    sh 'ansible-playbook -i hosts playbookCICD.yml --check'
                 }
             }
         }
-
-        stage('Push to DockerHub') {
-            steps {
-                echo '📤 Pushing Docker image to DockerHub...'
-                withCredentials([string(credentialsId: 'dockerhub-paswd', variable: 'dockerhubpwd')]) {
-                    sh "docker login -u ${DOCKER_USERNAME} -p ${dockerhubpwd}"
-                    sh "docker push ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
-                    sh "docker push ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest"
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo '☸️ Deploying to Kubernetes...'
-                withKubeConfig([credentialsId: 'kubeconfig-file']) {
-                    sh 'kubectl apply -f deployment.yaml'
-                    sh 'kubectl apply -f service.yaml'
-                }
-            }
-        }
-
     }
 
     post {
         always {
             echo '✅ Pipeline completed!'
+            cleanWs()
         }
         success {
             echo '🎉 Build, Test, Package, Docker Build/Push, and Deployment succeeded!'
@@ -102,4 +78,3 @@ pipeline {
         }
     }
 }
-
