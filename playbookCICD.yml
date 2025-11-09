@@ -44,12 +44,12 @@
         state: present
         namespace: jenkins
         src: deployment.yml
-        kubeconfig: config
+        validate_certs: no
 
     - name: Apply Kubernetes Service 
       kubernetes.core.k8s:
         state: present
         namespace: jenkins
         src: service.yml
-        kubeconfig: config
+        validate_certs: no
 
