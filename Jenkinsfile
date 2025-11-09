@@ -48,67 +48,15 @@ pipeline {
         }
 
 
-        stage('Setup Kubernetes Dependencies') {
+        stage('Deploy with Ansible') {
             steps {
-                echo '🔧 Installing Kubernetes dependencies...'
+                echo '🚀 Deploying with Ansible (Docker + Kubernetes)...'
                 script {
-                    sh '''
-                        # Install kubernetes Python library for system Python3
-                        pip3 install kubernetes --break-system-packages || true
-                        
-                        # Install Ansible Kubernetes collection
-                        ansible-galaxy collection install kubernetes.core || true
-                        
-                        # Setup kubeconfig - copy from Windows user's .kube directory to Jenkins workspace
-                        mkdir -p ~/.kube
-                        if [ -f "/mnt/c/Users/a/.kube/config" ]; then
-                            cp /mnt/c/Users/a/.kube/config ~/.kube/config
-                            chmod 600 ~/.kube/config
-                            echo "✅ Kubeconfig copied from Windows user directory"
-                        elif [ -f "$HOME/.kube/config" ]; then
-                            echo "✅ Kubeconfig already exists in Jenkins home"
-                        else
-                            echo "❌ Warning: No kubeconfig found!"
-                        fi
-                        
-                        # Verify kubectl is available
-                        kubectl version --client || echo "kubectl not found, please install it"
-                        
-                        # Check if kubernetes cluster is accessible
-                        kubectl cluster-info || echo "Warning: Cannot connect to Kubernetes cluster"
-                        
-                        # Verify kubernetes Python module is available
-                        python3 -c "import kubernetes; print('✅ Kubernetes Python library installed')" || echo "❌ Kubernetes library not found"
-                    '''
+                    sh 'ansible-playbook -i hosts playbookCICD.yml'
                 }
             }
         }
 
-        stage('Deploy using ansible playbook') {
-            steps {
-                echo '🚀 Deploying to Kubernetes with Ansible...'
-                script {
-                    sh '''
-                        # Set KUBECONFIG environment variable
-                        export KUBECONFIG=$HOME/.kube/config
-                        
-                        # Verify we can access Kubernetes
-                        echo "Testing Kubernetes connection..."
-                        kubectl get nodes || echo "Warning: Cannot list nodes"
-                        
-                        # Ensure kubernetes namespace exists
-                        kubectl create namespace jenkins --dry-run=client -o yaml | kubectl apply -f - || true
-                        
-                        # Set environment variables for Ansible
-                        export ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3
-                        export K8S_AUTH_VERIFY_SSL=no
-                        
-                        # Run ansible playbook with verbose output for debugging
-                        ansible-playbook -i hosts playbookCICD.yml -v
-                    '''
-                }
-            }
-        }
     }
 
     post {
