@@ -51,8 +51,8 @@ pipeline {
         stage('Deploy with Ansible') {
             steps {
                 echo '🚀 Deploying with Ansible (Docker + Kubernetes)...'
-                script {
-                    sh 'ansible-playbook -i hosts playbookCICD.yml --vault-password-file .vault_pass'
+                withCredentials([string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')]) {
+                    sh 'echo "$VAULT_PASS" | ansible-playbook -i hosts playbookCICD.yml --vault-password-file /dev/stdin'
                 }
             }
         }
