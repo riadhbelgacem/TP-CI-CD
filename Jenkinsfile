@@ -52,7 +52,7 @@ pipeline {
             steps {
                 echo '🚀 Deploying with Ansible (Docker + Kubernetes)...'
                 script {
-                    sh 'ansible-playbook -i hosts playbookCICD.yml'
+                    sh 'ansible-playbook -i hosts playbookCICD.yml --vault-password-file .vault_pass'
                 }
             }
         }
