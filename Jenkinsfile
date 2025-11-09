@@ -48,10 +48,45 @@ pipeline {
         }
 
 
+        stage('Setup Kubernetes Dependencies') {
+            steps {
+                echo '🔧 Installing Kubernetes dependencies...'
+                script {
+                    sh '''
+                        # Install kubernetes Python library for system Python3
+                        sudo pip3 install kubernetes --break-system-packages || pip3 install --user kubernetes || true
+                        
+                        # Install Ansible Kubernetes collection
+                        ansible-galaxy collection install kubernetes.core || true
+                        
+                        # Verify kubectl is available
+                        kubectl version --client || echo "kubectl not found, please install it"
+                        
+                        # Check if kubernetes cluster is accessible
+                        kubectl cluster-info || echo "Warning: Cannot connect to Kubernetes cluster"
+                        
+                        # Verify kubernetes Python module is available
+                        python3 -c "import kubernetes; print('✅ Kubernetes Python library installed')" || echo "❌ Kubernetes library not found"
+                    '''
+                }
+            }
+        }
+
         stage('Deploy using ansible playbook') {
             steps {
+                echo '🚀 Deploying to Kubernetes with Ansible...'
                 script {
-                    sh 'ansible-playbook -i hosts playbookCICD.yml --check'
+                    sh '''
+                        # Ensure kubernetes namespace exists
+                        kubectl create namespace jenkins --dry-run=client -o yaml | kubectl apply -f - || true
+                        
+                        # Set environment variables for Ansible
+                        export ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3
+                        export K8S_AUTH_VERIFY_SSL=no
+                        
+                        # Run ansible playbook with verbose output for debugging
+                        ansible-playbook -i hosts playbookCICD.yml -v
+                    '''
                 }
             }
         }
