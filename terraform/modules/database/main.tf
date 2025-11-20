@@ -3,8 +3,6 @@
 # ==============================================
 
 resource "aws_db_instance" "country_db" {
-  provider = aws.localstack
-  
   identifier     = "country-db-${var.environment}"
   engine         = "postgres"
   engine_version = "13"
