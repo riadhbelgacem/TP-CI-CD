@@ -12,11 +12,11 @@ spec:
   template:                                 # Modèle des pods créés par le déploiement
     metadata:
       labels:
-        app: myapp     
+        app: myapp                          # Label appliqué aux pods (doit correspondre au selector)
       annotations:
         prometheus.io/scrape: "true"        # Enable Prometheus scraping
         prometheus.io/path: "/actuator/prometheus"  # Metrics endpoint path
-        prometheus.io/port: "8082"  # Label appliqué aux pods (doit correspondre au selector)
+        prometheus.io/port: "8082"          # Port for scraping metrics
     spec:
       containers:
       - name: myapp-container               # Nom du conteneur

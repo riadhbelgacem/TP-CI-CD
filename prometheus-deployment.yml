@@ -14,10 +14,12 @@ data:
         environment: 'production'
 
     scrape_configs:
+      # Scrape Prometheus itself
       - job_name: 'prometheus'
         static_configs:
           - targets: ['localhost:9090']
 
+      # Scrape Country Service application pods
       - job_name: 'country-service'
         metrics_path: '/actuator/prometheus'
         kubernetes_sd_configs:
@@ -26,13 +28,38 @@ data:
               names:
                 - jenkins
         relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_label_app]
+          # Only scrape pods with annotation prometheus.io/scrape=true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
-            regex: myapp
-          - source_labels: [__meta_kubernetes_pod_ip]
+            regex: true
+          # Use the port from annotation prometheus.io/port
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            target_label: __meta_kubernetes_pod_container_port_number
+            regex: (.+)
+          # Use custom metrics path if specified
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          # Build the address from pod IP and port
+          - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
             target_label: __address__
-            replacement: $1:8082
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+          # Add pod name as label
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: pod
+          # Add namespace as label
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: namespace
+          # Add app label
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: replace
+            target_label: app
 
 ---
 apiVersion: apps/v1
@@ -52,6 +79,7 @@ spec:
       labels:
         app: prometheus
     spec:
+      serviceAccountName: prometheus
       containers:
       - name: prometheus
         image: prom/prometheus:latest
