@@ -49,7 +49,8 @@ pipeline {
                 stage('Monitoring') {
                     steps {
                         sh '''
-                            kubectl get deployment prometheus-deployment,grafana-deployment -n jenkins
+                            kubectl get deployment prometheus-deployment -n jenkins
+                            kubectl get deployment grafana-deployment -n jenkins
                             PROMETHEUS_PORT=$(kubectl get svc prometheus-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
                             GRAFANA_PORT=$(kubectl get svc grafana-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
                             echo "📊 Prometheus: http://localhost:$PROMETHEUS_PORT"
