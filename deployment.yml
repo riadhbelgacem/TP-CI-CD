@@ -12,12 +12,16 @@ spec:
   template:                                 # Modèle des pods créés par le déploiement
     metadata:
       labels:
-        app: myapp                          # Label appliqué aux pods (doit correspondre au selector)
+        app: myapp     
+      annotations:
+        prometheus.io/scrape: "true"        # Enable Prometheus scraping
+        prometheus.io/path: "/actuator/prometheus"  # Metrics endpoint path
+        prometheus.io/port: "8082"  # Label appliqué aux pods (doit correspondre au selector)
     spec:
       containers:
       - name: myapp-container               # Nom du conteneur
         image: riadh2002/my-compte-service:latest  # Image Docker utilisée
         ports:
-        - containerPort: 8080               # Port sur lequel le conteneur écoute
+        - containerPort: 8082               # Port sur lequel le conteneur écoute
 
 
