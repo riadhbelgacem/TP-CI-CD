@@ -1,53 +1,45 @@
 # ==============================================
-# PostgreSQL Database Server (EC2 Instance)
-# NOTE: RDS requires LocalStack Pro. For free LocalStack demo,
-# we provision an EC2 instance to host PostgreSQL.
-# In production, this would be a managed RDS instance.
+# Database Infrastructure Demo with S3
+# NOTE: RDS and EC2 require LocalStack Pro.
+# For free LocalStack demo, we use S3 to demonstrate Terraform infrastructure provisioning.
+# In production, this would be RDS or EC2-hosted database.
 # ==============================================
 
-# EC2 instance for PostgreSQL database
-resource "aws_instance" "db_server" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (placeholder for LocalStack)
-  instance_type = var.db_instance_class
+# S3 bucket for database backups and configuration
+resource "aws_s3_bucket" "db_backup" {
+  bucket = "country-db-backup-${var.environment}"
   
   tags = merge(
     var.common_tags,
     {
-      Name        = "country-db-${var.environment}"
+      Name        = "country-db-backup-${var.environment}"
       Environment = var.environment
-      Role        = "PostgreSQL Database Server"
+      Purpose     = "Database backups and PostgreSQL configuration"
     }
   )
 }
 
-# Security group for database access
-resource "aws_security_group" "db_sg" {
-  name        = "country-db-sg-${var.environment}"
-  description = "Security group for PostgreSQL database server"
+# Enable versioning for backup safety
+resource "aws_s3_bucket_versioning" "db_backup" {
+  bucket = aws_s3_bucket.db_backup.id
   
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # In production, restrict this
-    description = "PostgreSQL access"
+  versioning_configuration {
+    status = "Enabled"
   }
+}
+
+# Upload a demo configuration file
+resource "aws_s3_object" "db_config" {
+  bucket  = aws_s3_bucket.db_backup.id
+  key     = "postgresql/db-config.json"
+  content = jsonencode({
+    database = "countrydb"
+    host     = "country-db-${var.environment}.mock.rds.amazonaws.com"
+    port     = 5432
+    environment = var.environment
+  })
   
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound"
-  }
-  
-  tags = merge(
-    var.common_tags,
-    {
-      Name        = "country-db-sg-${var.environment}"
-      Environment = var.environment
-    }
-  )
+  tags = var.common_tags
 }
 
 # Create database connection secret for Kubernetes
@@ -58,9 +50,10 @@ resource "kubernetes_secret" "db_connection" {
   }
   
   data = {
-    spring-datasource-url      = "jdbc:postgresql://${aws_instance.db_server.private_ip}:5432/countrydb"
+    spring-datasource-url      = "jdbc:postgresql://country-db-${var.environment}.mock.rds.amazonaws.com:5432/countrydb"
     spring-datasource-username = var.db_username
     spring-datasource-password = var.db_password
+    backup-bucket              = aws_s3_bucket.db_backup.id
   }
   
   type = "Opaque"
