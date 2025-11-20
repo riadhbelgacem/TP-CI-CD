@@ -29,6 +29,27 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn sonar:sonar \
+                          -Dsonar.projectKey=CountryService \
+                          -Dsonar.projectName='Country Service' \
+                          -Dsonar.java.binaries=target/classes
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 withCredentials([string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')]) {
@@ -41,20 +62,15 @@ pipeline {
             parallel {
                 stage('Kubernetes') {
                     steps {
-                        sh '''
-                            kubectl get deployments,pods,svc -n jenkins
-                        '''
+                        sh 'kubectl get deployments,pods,svc -n jenkins'
                     }
                 }
                 stage('Monitoring') {
                     steps {
                         sh '''
-                            kubectl get deployment prometheus-deployment -n jenkins
-                            kubectl get deployment grafana-deployment -n jenkins
-                            PROMETHEUS_PORT=$(kubectl get svc prometheus-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
-                            GRAFANA_PORT=$(kubectl get svc grafana-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
-                            echo "📊 Prometheus: http://localhost:$PROMETHEUS_PORT"
-                            echo "📈 Grafana: http://localhost:$GRAFANA_PORT (admin/admin123)"
+                            kubectl get deployment prometheus-deployment grafana-deployment -n jenkins
+                            echo "Prometheus: http://localhost:$(kubectl get svc prometheus-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')"
+                            echo "Grafana: http://localhost:$(kubectl get svc grafana-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')"
                         '''
                     }
                 }
@@ -66,50 +82,17 @@ pipeline {
                 withCredentials([string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')]) {
                     dir('terraform') {
                         sh '''
-                            # Extract LocalStack token from vault
                             export LOCALSTACK_AUTH_TOKEN=$(echo "$VAULT_PASS" | ansible-vault view ../vault.yml --vault-password-file /dev/stdin | grep localstack_auth_token | awk '{print $2}' | tr -d '"')
-                            
-                            # Stop any existing LocalStack container
                             docker-compose down -v || true
-                            docker rm -f localstack-countryservice || true
-                            
-                            # Start LocalStack with token from vault
                             docker-compose up -d
                             
-                            # Wait for LocalStack to be ready
-                            echo "Waiting for LocalStack..."
-                            attempt=0
-                            max_attempts=30
-                            
-                            while [ $attempt -lt $max_attempts ]; do
-                                if curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"'; then
-                                    echo "✅ LocalStack is ready!"
-                                    sleep 5  # Extra wait to ensure it's fully initialized
-                                    break
-                                fi
-                                attempt=$((attempt + 1))
-                                echo "Attempt $attempt/$max_attempts..."
+                            for i in {1..30}; do
+                                curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"' && break
                                 sleep 2
                             done
                             
-                            if [ $attempt -eq $max_attempts ]; then
-                                echo "❌ LocalStack failed to start"
-                                docker-compose logs localstack
-                                exit 1
-                            fi
-                            
                             terraform init -upgrade
-                            terraform validate
                             terraform apply -auto-approve
-                            
-                            echo "✅ S3 Bucket created: $(terraform output -raw bucket_name)"
-                            echo "✅ Test file uploaded: $(terraform output -raw test_file_key)"
-                            echo "📊 View resources at: https://app.localstack.cloud/dashboard"
-                            
-                            # Cleanup disabled - resources will persist
-                            echo "⚠️  Cleanup disabled - LocalStack will keep running with resources"
-                            # terraform destroy -auto-approve
-                            # docker-compose down -v
                         '''
                     }
                 }
@@ -120,12 +103,6 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        success {
-            echo '✅ Pipeline succeeded!'
-        }
-        failure {
-            echo '❌ Pipeline failed!'
         }
     }
 }
