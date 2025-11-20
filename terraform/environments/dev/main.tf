@@ -29,6 +29,7 @@ provider "aws" {
   skip_requesting_account_id  = true
   
   endpoints {
+    ec2 = "http://localhost:4566"
     rds = "http://localhost:4566"
   }
 }
