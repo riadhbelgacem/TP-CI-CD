@@ -63,48 +63,55 @@ pipeline {
 
         stage('Test Infrastructure') {
             steps {
-                dir('terraform') {
-                    sh '''
-                        # Stop any existing LocalStack container
-                        docker-compose down -v || true
-                        docker rm -f localstack-countryservice || true
-                        
-                        # Start LocalStack
-                        docker-compose up -d
-                        
-                        # Wait for LocalStack to be ready
-                        echo "Waiting for LocalStack..."
-                        attempt=0
-                        max_attempts=30
-                        
-                        while [ $attempt -lt $max_attempts ]; do
-                            if curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"'; then
-                                echo "✅ LocalStack is ready!"
-                                sleep 5  # Extra wait to ensure it's fully initialized
-                                break
+                withCredentials([string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')]) {
+                    dir('terraform') {
+                        sh '''
+                            # Extract LocalStack token from vault
+                            export LOCALSTACK_AUTH_TOKEN=$(echo "$VAULT_PASS" | ansible-vault view ../vault.yml --vault-password-file /dev/stdin | grep localstack_auth_token | awk '{print $2}' | tr -d '"')
+                            
+                            # Stop any existing LocalStack container
+                            docker-compose down -v || true
+                            docker rm -f localstack-countryservice || true
+                            
+                            # Start LocalStack with token from vault
+                            docker-compose up -d
+                            
+                            # Wait for LocalStack to be ready
+                            echo "Waiting for LocalStack..."
+                            attempt=0
+                            max_attempts=30
+                            
+                            while [ $attempt -lt $max_attempts ]; do
+                                if curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"'; then
+                                    echo "✅ LocalStack is ready!"
+                                    sleep 5  # Extra wait to ensure it's fully initialized
+                                    break
+                                fi
+                                attempt=$((attempt + 1))
+                                echo "Attempt $attempt/$max_attempts..."
+                                sleep 2
+                            done
+                            
+                            if [ $attempt -eq $max_attempts ]; then
+                                echo "❌ LocalStack failed to start"
+                                docker-compose logs localstack
+                                exit 1
                             fi
-                            attempt=$((attempt + 1))
-                            echo "Attempt $attempt/$max_attempts..."
-                            sleep 2
-                        done
-                        
-                        if [ $attempt -eq $max_attempts ]; then
-                            echo "❌ LocalStack failed to start"
-                            docker-compose logs localstack
-                            exit 1
-                        fi
-                        
-                        terraform init -upgrade
-                        terraform validate
-                        terraform apply -auto-approve
-                        
-                        echo "✅ S3 Bucket created: $(terraform output -raw bucket_name)"
-                        echo "✅ Test file uploaded: $(terraform output -raw test_file_key)"
-                        
-                        # Cleanup
-                        terraform destroy -auto-approve
-                        docker-compose down -v
-                    '''
+                            
+                            terraform init -upgrade
+                            terraform validate
+                            terraform apply -auto-approve
+                            
+                            echo "✅ S3 Bucket created: $(terraform output -raw bucket_name)"
+                            echo "✅ Test file uploaded: $(terraform output -raw test_file_key)"
+                            echo "📊 View resources at: https://app.localstack.cloud/dashboard"
+                            
+                            # Cleanup disabled - resources will persist
+                            echo "⚠️  Cleanup disabled - LocalStack will keep running with resources"
+                            # terraform destroy -auto-approve
+                            # docker-compose down -v
+                        '''
+                    }
                 }
             }
         }
