@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  namespace: jenkins
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+          name: web
+        env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: "admin"
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "admin123"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: grafana-storage
+        emptyDir: {}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: jenkins
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30300
+    protocol: TCP
+    name: web
+  selector:
+    app: grafana
