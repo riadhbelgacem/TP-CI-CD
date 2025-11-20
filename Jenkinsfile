@@ -31,13 +31,16 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        mvn sonar:sonar \
-                          -Dsonar.projectKey=CountryService \
-                          -Dsonar.projectName='Country Service' \
-                          -Dsonar.java.binaries=target/classes
-                    '''
+                withSonarQubeEnv('MySonarQubeServer') {
+                    withCredentials([string(credentialsId: 'jenkins-sonar', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            mvn sonar:sonar \
+                              -Dsonar.login=$SONAR_TOKEN \
+                              -Dsonar.projectKey=CountryService \
+                              -Dsonar.projectName='Country Service' \
+                              -Dsonar.java.binaries=target/classes
+                        '''
+                    }
                 }
             }
         }
