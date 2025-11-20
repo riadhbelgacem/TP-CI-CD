@@ -56,6 +56,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Verify Deployment') {
+            steps {
+                echo '✅ Verifying Kubernetes deployment...'
+                script {
+                    sh '''
+                        kubectl get deployments -n jenkins
+                        kubectl get pods -n jenkins
+                        kubectl get svc -n jenkins
+                    '''
+                }
+            }
+        }
         
         stage('Verify Monitoring Stack') {
             steps {
@@ -82,9 +95,6 @@ pipeline {
                 }
             }
         }
-    }
-
-
     }
 
     post {
