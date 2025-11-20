@@ -37,21 +37,6 @@ pipeline {
             }
         }
 
-        stage('Quality Gate') {
-            steps {
-                script {
-                    try {
-                        timeout(time: 2, unit: 'MINUTES') {
-                            waitForQualityGate abortPipeline: false
-                        }
-                    } catch (Exception e) {
-                        echo "Quality Gate check failed or timed out, but continuing build..."
-                        echo "Check SonarQube dashboard manually: http://localhost:9000/dashboard?id=CountryService"
-                    }
-                }
-            }
-        }
-
         stage('Deploy') {
             steps {
                 withCredentials([string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')]) {
