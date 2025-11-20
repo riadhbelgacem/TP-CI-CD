@@ -1,0 +1,144 @@
+{
+  "dashboard": {
+    "title": "All Pods Monitoring - Jenkins Namespace",
+    "tags": ["kubernetes", "pods", "jenkins"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Pod CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{namespace=\"jenkins\"}[5m])",
+            "legendFormat": "{{ pod }} - {{ container }}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "CPU"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "Pod Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{namespace=\"jenkins\"}",
+            "legendFormat": "{{ pod }} - {{ container }}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Memory"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "HTTP Requests Rate (Country Service)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{namespace=\"jenkins\", job=\"country-service\"}[5m])",
+            "legendFormat": "{{ pod }} - {{ uri }} - {{ method }}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "HTTP Response Time (Country Service)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_sum{namespace=\"jenkins\", job=\"country-service\"}[5m]) / rate(http_server_requests_seconds_count{namespace=\"jenkins\", job=\"country-service\"}[5m])",
+            "legendFormat": "{{ pod }} - {{ uri }}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "JVM Heap Memory (Country Service)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{namespace=\"jenkins\", job=\"country-service\", area=\"heap\"}",
+            "legendFormat": "{{ pod }} - Used",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_memory_max_bytes{namespace=\"jenkins\", job=\"country-service\", area=\"heap\"}",
+            "legendFormat": "{{ pod }} - Max",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Memory"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "title": "Pod Restart Count",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "kube_pod_container_status_restarts_total{namespace=\"jenkins\"}",
+            "legendFormat": "{{ pod }}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "title": "All Pods Status",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "kube_pod_info{namespace=\"jenkins\"}",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "pod": "Pod Name",
+                "node": "Node",
+                "created_by_kind": "Controller Type",
+                "created_by_name": "Controller Name"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "refresh": "5s",
+    "time": {"from": "now-15m", "to": "now"},
+    "timepicker": {},
+    "schemaVersion": 27,
+    "version": 0
+  },
+  "overwrite": true
+}

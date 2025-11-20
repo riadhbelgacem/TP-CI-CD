@@ -2,36 +2,25 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK21'        // Must match the name in "Global Tool Configuration"
-        maven 'M2_HOME'    // Must match your Maven installation name
+        jdk 'JDK21'
+        maven 'M2_HOME'
     }
 
     environment {
-        // Docker environment variables
         DOCKER_USERNAME = "riadh2002"
         DOCKER_IMAGE_NAME = "my-country-service"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                echo '📥 Checking out source code...'
                 git branch: 'main', url: 'https://github.com/riadhbelgacem/TP-CI-CD.git'
             }
         }
 
-        stage('Compile') {
+        stage('Build & Test') {
             steps {
-                echo '🔧 Compiling source code...'
-                sh 'mvn clean compile'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo '🧪 Running unit tests...'
-                sh 'mvn test'
+                sh 'mvn clean package'
             }
             post {
                 always {
@@ -40,57 +29,60 @@ pipeline {
             }
         }
 
-        stage('Package') {
+        stage('Deploy') {
             steps {
-                echo '📦 Packaging the application...'
-                sh 'mvn clean package'
-            }
-        }
-
-
-        stage('Deploy with Ansible') {
-            steps {
-                echo '🚀 Deploying with Ansible (Docker + Kubernetes)...'
                 withCredentials([string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')]) {
                     sh 'echo "$VAULT_PASS" | ansible-playbook -i hosts playbookCICD.yml --vault-password-file /dev/stdin'
                 }
             }
         }
 
-        stage('Verify Deployment') {
-            steps {
-                echo '✅ Verifying Kubernetes deployment...'
-                script {
-                    sh '''
-                        kubectl get deployments -n jenkins
-                        kubectl get pods -n jenkins
-                        kubectl get svc -n jenkins
-                    '''
+        stage('Verify') {
+            parallel {
+                stage('Kubernetes') {
+                    steps {
+                        sh '''
+                            kubectl get deployments,pods,svc -n jenkins
+                        '''
+                    }
+                }
+                stage('Monitoring') {
+                    steps {
+                        sh '''
+                            kubectl get deployment prometheus-deployment,grafana-deployment -n jenkins
+                            PROMETHEUS_PORT=$(kubectl get svc prometheus-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
+                            GRAFANA_PORT=$(kubectl get svc grafana-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
+                            echo "📊 Prometheus: http://localhost:$PROMETHEUS_PORT"
+                            echo "📈 Grafana: http://localhost:$GRAFANA_PORT (admin/admin123)"
+                        '''
+                    }
                 }
             }
         }
-        
-        stage('Verify Monitoring Stack') {
+
+        stage('Test Infrastructure') {
             steps {
-                echo '📊 Verifying Prometheus and Grafana deployment...'
-                script {
+                dir('terraform') {
                     sh '''
-                        echo "=== Prometheus Status ==="
-                        kubectl get deployment prometheus-deployment -n jenkins
-                        kubectl get svc prometheus-service -n jenkins
+                        docker-compose up -d
                         
-                        echo "=== Grafana Status ==="
-                        kubectl get deployment grafana-deployment -n jenkins
-                        kubectl get svc grafana-service -n jenkins
+                        # Wait for LocalStack
+                        for i in {1..30}; do
+                            curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"' && break
+                            sleep 2
+                        done
                         
-                        echo "=== Getting NodePort URLs ==="
-                        PROMETHEUS_PORT=$(kubectl get svc prometheus-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
-                        GRAFANA_PORT=$(kubectl get svc grafana-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
-                        NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+                        terraform init -upgrade
+                        terraform validate
+                        terraform apply -auto-approve
                         
-                        echo "📊 Prometheus URL: http://$NODE_IP:$PROMETHEUS_PORT"
-                        echo "📈 Grafana URL: http://$NODE_IP:$GRAFANA_PORT"
-                        echo "Grafana Credentials - Username: admin, Password: admin123"
+                        # Test S3
+                        BUCKET=$(terraform output -raw bucket_name)
+                        aws --endpoint-url=http://localhost:4566 s3 ls s3://$BUCKET
+                        
+                        # Cleanup
+                        terraform destroy -auto-approve
+                        docker-compose down
                     '''
                 }
             }
@@ -99,14 +91,13 @@ pipeline {
 
     post {
         always {
-            echo '✅ Pipeline completed!'
             cleanWs()
         }
         success {
-            echo '🎉 Build, Test, Package, Docker Build/Push, and Deployment succeeded!'
+            echo '✅ Pipeline succeeded!'
         }
         failure {
-            echo '❌ Pipeline failed. Check console logs for details.'
+            echo '❌ Pipeline failed!'
         }
     }
 }
