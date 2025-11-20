@@ -65,6 +65,11 @@ pipeline {
             steps {
                 dir('terraform') {
                     sh '''
+                        # Stop any existing LocalStack container
+                        docker-compose down -v || true
+                        docker rm -f localstack-countryservice || true
+                        
+                        # Start LocalStack
                         docker-compose up -d
                         
                         # Wait for LocalStack to be ready
@@ -99,7 +104,7 @@ pipeline {
                         
                         # Cleanup
                         terraform destroy -auto-approve
-                        docker-compose down
+                        docker-compose down -v
                     '''
                 }
             }
