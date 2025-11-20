@@ -34,7 +34,7 @@ spec:
       volumes:
       - name: grafana-storage
         emptyDir: {}
-
+---
 apiVersion: v1
 kind: Service
 metadata:
