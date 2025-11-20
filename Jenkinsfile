@@ -67,11 +67,27 @@ pipeline {
                     sh '''
                         docker-compose up -d
                         
-                        # Wait for LocalStack
-                        for i in {1..30}; do
-                            curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"' && break
+                        # Wait for LocalStack to be ready
+                        echo "Waiting for LocalStack..."
+                        attempt=0
+                        max_attempts=30
+                        
+                        while [ $attempt -lt $max_attempts ]; do
+                            if curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"'; then
+                                echo "✅ LocalStack is ready!"
+                                sleep 5  # Extra wait to ensure it's fully initialized
+                                break
+                            fi
+                            attempt=$((attempt + 1))
+                            echo "Attempt $attempt/$max_attempts..."
                             sleep 2
                         done
+                        
+                        if [ $attempt -eq $max_attempts ]; then
+                            echo "❌ LocalStack failed to start"
+                            docker-compose logs localstack
+                            exit 1
+                        fi
                         
                         terraform init -upgrade
                         terraform validate
