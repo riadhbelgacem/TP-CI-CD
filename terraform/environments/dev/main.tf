@@ -17,7 +17,6 @@ terraform {
   }
 }
 
-# Providers
 provider "aws" {
   region = "us-east-1"
   
@@ -27,11 +26,10 @@ provider "aws" {
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
+  s3_use_path_style           = true
   
   endpoints {
-    s3  = "http://localhost:4566"
-    ec2 = "http://localhost:4566"
-    rds = "http://localhost:4566"
+    s3 = "http://localhost:4566"
   }
 }
 
@@ -39,18 +37,12 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-# Use the database module
 module "country_database" {
   source = "../../modules/database"
   
-  environment            = "dev"
-  db_instance_class      = "db.t3.micro"
-  db_allocated_storage   = 20
-  db_max_allocated_storage = 50
-  
-  db_username = var.db_username
-  db_password = var.db_password
-  
+  environment          = "dev"
+  db_username          = var.db_username
+  db_password          = var.db_password
   kubernetes_namespace = "jenkins"
   
   common_tags = {
@@ -60,18 +52,10 @@ module "country_database" {
   }
 }
 
-# Outputs
-output "database_endpoint" {
-  description = "Database endpoint for dev environment"
-  value       = module.country_database.db_endpoint
-}
-
-output "database_url" {
-  description = "JDBC URL for Spring Boot application.properties"
-  value       = module.country_database.db_connection_url
+output "backup_bucket" {
+  value = module.country_database.backup_bucket_name
 }
 
 output "kubernetes_secret" {
-  description = "Kubernetes secret name with DB credentials"
-  value       = module.country_database.kubernetes_secret_name
+  value = module.country_database.kubernetes_secret_name
 }
