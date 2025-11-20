@@ -54,4 +54,37 @@
         namespace: jenkins
         src: service.yml
         validate_certs: no
+ - name: Apply Prometheus Deployment
+      kubernetes.core.k8s:
+        state: present
+        namespace: jenkins
+        src: prometheus-deployment.yml
+        validate_certs: no
+
+    - name: Apply Grafana Deployment
+      kubernetes.core.k8s:
+        state: present
+        namespace: jenkins
+        src: grafana-deployment.yml
+        validate_certs: no
+
+    - name: Wait for Prometheus to be ready
+      kubernetes.core.k8s_info:
+        kind: Deployment
+        namespace: jenkins
+        name: prometheus-deployment
+      register: prometheus_deployment
+      until: prometheus_deployment.resources[0].status.readyReplicas | default(0) >= 1
+      retries: 10
+      delay: 10
+
+    - name: Wait for Grafana to be ready
+      kubernetes.core.k8s_info:
+        kind: Deployment
+        namespace: jenkins
+        name: grafana-deployment
+      register: grafana_deployment
+      until: grafana_deployment.resources[0].status.readyReplicas | default(0) >= 1
+      retries: 10
+      delay: 10
 
