@@ -1,4 +1,4 @@
-
+---
 - name: Build and Deploy Image to Kubernetes 
   hosts: localhost
   connection: local
@@ -54,7 +54,8 @@
         namespace: jenkins
         src: service.yml
         validate_certs: no
- - name: Apply Prometheus Deployment
+
+    - name: Apply Prometheus Deployment
       kubernetes.core.k8s:
         state: present
         namespace: jenkins
