@@ -56,6 +56,34 @@ pipeline {
                 }
             }
         }
+        
+        stage('Verify Monitoring Stack') {
+            steps {
+                echo '📊 Verifying Prometheus and Grafana deployment...'
+                script {
+                    sh '''
+                        echo "=== Prometheus Status ==="
+                        kubectl get deployment prometheus-deployment -n jenkins
+                        kubectl get svc prometheus-service -n jenkins
+                        
+                        echo "=== Grafana Status ==="
+                        kubectl get deployment grafana-deployment -n jenkins
+                        kubectl get svc grafana-service -n jenkins
+                        
+                        echo "=== Getting NodePort URLs ==="
+                        PROMETHEUS_PORT=$(kubectl get svc prometheus-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
+                        GRAFANA_PORT=$(kubectl get svc grafana-service -n jenkins -o jsonpath='{.spec.ports[0].nodePort}')
+                        NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+                        
+                        echo "📊 Prometheus URL: http://$NODE_IP:$PROMETHEUS_PORT"
+                        echo "📈 Grafana URL: http://$NODE_IP:$GRAFANA_PORT"
+                        echo "Grafana Credentials - Username: admin, Password: admin123"
+                    '''
+                }
+            }
+        }
+    }
+
 
     }
 
